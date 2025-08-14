@@ -1,116 +1,114 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AutoLetter AI™ - Newsletter Generator</title>
+  <title>AutoLetter AI™</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f9;
       margin: 0;
       padding: 20px;
-      color: #333;
+      background: #f4f4f4;
     }
     header {
-      background-color: #4a90e2;
+      background-color: #007bff;
       color: white;
       padding: 20px;
-      text-align: center;
       border-radius: 8px;
+      text-align: center;
+      font-size: 24px;
     }
-    main {
+    form {
+      margin-top: 30px;
       background: white;
       padding: 20px;
-      margin-top: 20px;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    label {
-      font-weight: bold;
-    }
-    input, select, textarea {
+    label, select, input {
+      display: block;
       width: 100%;
-      padding: 10px;
-      margin: 10px 0 20px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      margin-bottom: 15px;
+      font-size: 16px;
     }
     button {
-      background-color: #4a90e2;
+      background-color: #007bff;
       color: white;
-      border: none;
       padding: 12px 20px;
-      border-radius: 5px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
     }
-    .newsletter-preview {
+    #newsletterOutput {
       margin-top: 30px;
       padding: 20px;
-      background: #f9f9f9;
-      border-left: 5px solid #4a90e2;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      min-height: 200px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>AutoLetter AI™</h1>
-    <p>Create engaging newsletters in seconds using AI</p>
-  </header>
-  <main>
-    <form id="newsletterForm">
-      <label for="businessType">Your Business Type:</label>
-      <input type="text" id="businessType" placeholder="e.g., Bakery, Dentist, Life Coach" required />
+  <header>AutoLetter AI™</header>
 
-      <label for="tone">Preferred Tone:</label>
-      <select id="tone">
-        <option value="friendly">Friendly</option>
-        <option value="professional">Professional</option>
-        <option value="inspirational">Inspirational</option>
-      </select>
+  <form id="newsletterForm">
+    <label for="businessType">Your Business Type:</label>
+    <input type="text" id="businessType" required placeholder="e.g. Real Estate, AI Consultant">
 
-      <label for="frequency">Newsletter Frequency:</label>
-      <select id="frequency">
-        <option value="daily">Daily</option>
-        <option value="weekly">Weekly</option>
-        <option value="monthly">Monthly</option>
-      </select>
+    <label for="tone">Preferred Tone:</label>
+    <select id="tone">
+      <option value="Professional">Professional</option>
+      <option value="Friendly">Friendly</option>
+      <option value="Witty">Witty</option>
+    </select>
 
-      <button type="button" onclick="generateNewsletter()">Generate Newsletter</button>
-    </form>
+    <label for="frequency">Newsletter Frequency:</label>
+    <select id="frequency">
+      <option value="Weekly">Weekly</option>
+      <option value="Biweekly">Biweekly</option>
+      <option value="Monthly">Monthly</option>
+    </select>
 
-    <div class="newsletter-preview" id="output">
-      <h2>Preview:</h2>
-      <p>Fill out the form and click "Generate Newsletter" to see a sample.</p>
-    </div>
-  </main>
+    <button type="submit">Generate Newsletter</button>
+  </form>
+
+  <div id="newsletterOutput">
+    <h2>Your Newsletter Will Appear Below 👇</h2>
+    <p>Waiting for your request...</p>
+  </div>
 
   <script>
-    function generateNewsletter() {
-      const business = document.getElementById('businessType').value.trim();
+    document.getElementById('newsletterForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const businessType = document.getElementById('businessType').value;
       const tone = document.getElementById('tone').value;
       const frequency = document.getElementById('frequency').value;
-      const output = document.getElementById('output');
 
-      if (!business) {
-        alert('Please enter your business type.');
-        return;
+      const prompt = `Create a ${frequency.toLowerCase()} newsletter for a ${businessType} business with a ${tone.toLowerCase()} tone. Include sections like Tip of the Week, Client Success Story, and Fun Fact or Insight.`;
+
+      const outputDiv = document.getElementById('newsletterOutput');
+      outputDiv.innerHTML = "<p><em>Generating your newsletter...</em></p>";
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+
+        const data = await response.json();
+        outputDiv.innerHTML = `<h2>Your Newsletter</h2><p>${data.output.replace(/\n/g, '<br>')}</p>`;
+        window.scrollTo({ top: outputDiv.offsetTop - 10, behavior: 'smooth' });
+
+      } catch (err) {
+        outputDiv.innerHTML = `<p style="color:red;">❌ Failed to generate newsletter. Please try again later.</p>`;
+        console.error(err);
       }
-
-      output.innerHTML = `
-        <h2>${business} ${frequency.charAt(0).toUpperCase() + frequency.slice(1)} Newsletter</h2>
-        <p><strong>Tone:</strong> ${tone.charAt(0).toUpperCase() + tone.slice(1)}</p>
-        <h3>In This Issue:</h3>
-        <ul>
-          <li>💡 Tip of the ${frequency === "daily" ? "Day" : frequency === "weekly" ? "Week" : "Month"}</li>
-          <li>📢 Product/Service Spotlight</li>
-          <li>🎉 Customer Testimonial</li>
-          <li>🧠 Fun Fact or Insight</li>
-        </ul>
-        <p>Start connecting with your audience today — effortlessly, with AutoLetter AI™.</p>
-      `;
-    }
+    });
   </script>
 </body>
 </html>
