@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AutoLetter AI™ - Newsletter Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    header {
+      background-color: #4a90e2;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-radius: 8px;
+    }
+    main {
+      background: white;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0 20px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4a90e2;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .newsletter-preview {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-left: 5px solid #4a90e2;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AutoLetter AI™</h1>
+    <p>Create engaging newsletters in seconds using AI</p>
+  </header>
+  <main>
+    <form id="newsletterForm">
+      <label for="businessType">Your Business Type:</label>
+      <input type="text" id="businessType" placeholder="e.g., Bakery, Dentist, Life Coach" required />
+
+      <label for="tone">Preferred Tone:</label>
+      <select id="tone">
+        <option value="friendly">Friendly</option>
+        <option value="professional">Professional</option>
+        <option value="inspirational">Inspirational</option>
+      </select>
+
+      <label for="frequency">Newsletter Frequency:</label>
+      <select id="frequency">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+
+      <button type="button" onclick="generateNewsletter()">Generate Newsletter</button>
+    </form>
+
+    <div class="newsletter-preview" id="output">
+      <h2>Preview:</h2>
+      <p>Fill out the form and click "Generate Newsletter" to see a sample.</p>
+    </div>
+  </main>
+
+  <script>
+    function generateNewsletter() {
+      const business = document.getElementById('businessType').value.trim();
+      const tone = document.getElementById('tone').value;
+      const frequency = document.getElementById('frequency').value;
+      const output = document.getElementById('output');
+
+      if (!business) {
+        alert('Please enter your business type.');
+        return;
+      }
+
+      output.innerHTML = `
+        <h2>${business} ${frequency.charAt(0).toUpperCase() + frequency.slice(1)} Newsletter</h2>
+        <p><strong>Tone:</strong> ${tone.charAt(0).toUpperCase() + tone.slice(1)}</p>
+        <h3>In This Issue:</h3>
+        <ul>
+          <li>💡 Tip of the ${frequency === "daily" ? "Day" : frequency === "weekly" ? "Week" : "Month"}</li>
+          <li>📢 Product/Service Spotlight</li>
+          <li>🎉 Customer Testimonial</li>
+          <li>🧠 Fun Fact or Insight</li>
+        </ul>
+        <p>Start connecting with your audience today — effortlessly, with AutoLetter AI™.</p>
+      `;
+    }
+  </script>
+</body>
+</html>
