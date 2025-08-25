@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AutoLetter AI™</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 24px;
+    }
+    form {
+      margin-top: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label, select, input {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #newsletterOutput {
+      margin-top: 30px;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      min-height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <header>AutoLetter AI™</header>
+
+  <form id="newsletterForm">
+    <label for="businessType">Your Business Type:</label>
+    <input type="text" id="businessType" required placeholder="e.g. Real Estate, AI Consultant">
+
+    <label for="tone">Preferred Tone:</label>
+    <select id="tone">
+      <option value="Professional">Professional</option>
+      <option value="Friendly">Friendly</option>
+      <option value="Witty">Witty</option>
+    </select>
+
+    <label for="frequency">Newsletter Frequency:</label>
+    <select id="frequency">
+      <option value="Weekly">Weekly</option>
+      <option value="Biweekly">Biweekly</option>
+      <option value="Monthly">Monthly</option>
+    </select>
+
+    <button type="submit">Generate Newsletter</button>
+  </form>
+
+  <div id="newsletterOutput">
+    <h2>Your Newsletter Will Appear Below 👇</h2>
+    <p>Waiting for your request...</p>
+  </div>
+
+  <script>
+    document.getElementById('newsletterForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const businessType = document.getElementById('businessType').value;
+      const tone = document.getElementById('tone').value;
+      const frequency = document.getElementById('frequency').value;
+
+      const prompt = `Create a ${frequency.toLowerCase()} newsletter for a ${businessType} business with a ${tone.toLowerCase()} tone. Include sections like Tip of the Week, Client Success Story, and Fun Fact or Insight.`;
+
+      const outputDiv = document.getElementById('newsletterOutput');
+      outputDiv.innerHTML = "<p><em>Generating your newsletter...</em></p>";
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+
+        const data = await response.json();
+        outputDiv.innerHTML = `<h2>Your Newsletter</h2><p>${data.output.replace(/\n/g, '<br>')}</p>`;
+        window.scrollTo({ top: outputDiv.offsetTop - 10, behavior: 'smooth' });
+
+      } catch (err) {
+        outputDiv.innerHTML = `<p style="color:red;">❌ Failed to generate newsletter. Please try again later.</p>`;
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
