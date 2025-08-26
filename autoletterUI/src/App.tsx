@@ -9,7 +9,7 @@ function App() {
         </div>
       </header>
       <main className="container mx-auto px-4 py-8">
-        <p className="text-gray-600">Newsletter UI coming soon...</p>
+        <p className="text-gray-600">Building newsletter components...</p>
       </main>
     </div>
   );
