@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ProspectsTable } from '../components/ProspectsTable';
 import { Filters } from '../components/Filters';
+import { Editor } from '../components/Editor';
+import { Preview } from '../components/Preview';
+import { SendBar } from '../components/SendBar';
 import { useProspects } from '../hooks/useProspects';
 import { ProspectFilters } from '../lib/types';
 
@@ -8,6 +11,22 @@ const NewsletterPage: React.FC = () => {
   const [filters, setFilters] = useState<ProspectFilters>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { prospects, loading, total } = useProspects(filters);
+
+  const [subject, setSubject] = useState('');
+  const [fromName, setFromName] = useState('AutoLetter Team');
+  const [fromEmail] = useState('newsletter@autoletter.ai');
+  const [previewText, setPreviewText] = useState('');
+  const [bodyHtml, setBodyHtml] = useState('');
+  const [campaignId, setCampaignId] = useState<string | null>(null);
+  const [campaignScheduled, setCampaignScheduled] = useState(false);
+
+  const handleSelectionChange = useCallback((ids: string[]) => {
+    setSelectedIds(ids);
+  }, []);
+
+  const handleFiltersChange = useCallback((newFilters: ProspectFilters) => {
+    setFilters(newFilters);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -33,14 +52,14 @@ const NewsletterPage: React.FC = () => {
           
           <Filters 
             filters={filters} 
-            onFiltersChange={setFilters} 
+            onFiltersChange={handleFiltersChange} 
           />
           
           <ProspectsTable
             prospects={prospects}
             loading={loading}
             selectedIds={selectedIds}
-            onSelectionChange={setSelectedIds}
+            onSelectionChange={handleSelectionChange}
           />
           
           {!loading && (
@@ -49,6 +68,49 @@ const NewsletterPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <Editor
+            subject={subject}
+            fromName={fromName}
+            fromEmail={fromEmail}
+            previewText={previewText}
+            bodyHtml={bodyHtml}
+            onSubjectChange={setSubject}
+            onFromNameChange={setFromName}
+            onPreviewTextChange={setPreviewText}
+            onBodyChange={setBodyHtml}
+          />
+          
+          <Preview
+            subject={subject}
+            fromName={fromName}
+            fromEmail={fromEmail}
+            previewText={previewText}
+            bodyHtml={bodyHtml}
+          />
+        </div>
+
+        <SendBar
+          subject={subject}
+          fromName={fromName}
+          previewText={previewText}
+          bodyHtml={bodyHtml}
+          selectedIds={selectedIds}
+          filters={filters}
+          onSendSuccess={(id, scheduled) => {
+            setCampaignId(id);
+            setCampaignScheduled(scheduled || false);
+          }}
+        />
+
+        {campaignId && (
+          <div className="mt-6 bg-green-50 border border-green-200 rounded-md p-4">
+            <p className="text-green-800">
+              Newsletter {campaignScheduled ? 'scheduled' : 'sent'}! Campaign ID: {campaignId}
+            </p>
+          </div>
+        )}
       </main>
     </div>
   );

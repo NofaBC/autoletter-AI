@@ -9,7 +9,7 @@ interface ProspectsTableProps {
   onSelectionChange: (ids: string[]) => void;
 }
 
-export const ProspectsTable: React.FC<ProspectsTableProps> = ({
+export const ProspectsTable = React.memo<ProspectsTableProps>(({
   prospects,
   loading,
   selectedIds,
@@ -136,4 +136,4 @@ export const ProspectsTable: React.FC<ProspectsTableProps> = ({
       </div>
     </div>
   );
-};
+});

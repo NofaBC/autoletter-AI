@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api, mockData } from '../lib/api';
+import { api } from '../lib/api';
 import { Prospect, ProspectFilters } from '../lib/types';
 
 export const useProspects = (filters: ProspectFilters = {}) => {
@@ -14,26 +14,15 @@ export const useProspects = (filters: ProspectFilters = {}) => {
       setError(null);
       
       try {
+        // API handles mock fallback internally
         const response = await api.getProspects(filters);
         setProspects(response.items);
         setTotal(response.total);
       } catch (err) {
-        console.log('Using mock data as fallback');
-        
-        let filtered = [...mockData.prospects];
-        
-        if (filters.tag) {
-          filtered = filtered.filter(p => p.tags.includes(filters.tag!));
-        }
-        if (filters.source) {
-          filtered = filtered.filter(p => p.source === filters.source);
-        }
-        if (filters.opened !== undefined) {
-          filtered = filtered.filter(p => p.opened === filters.opened);
-        }
-        
-        setProspects(filtered);
-        setTotal(filtered.length);
+        // This should rarely happen now since API has fallback
+        setError('Failed to load prospects');
+        setProspects([]);
+        setTotal(0);
       } finally {
         setLoading(false);
       }

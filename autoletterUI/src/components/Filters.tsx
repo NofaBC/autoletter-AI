@@ -8,7 +8,7 @@ interface FiltersProps {
   onFiltersChange: (filters: ProspectFilters) => void;
 }
 
-export const Filters: React.FC<FiltersProps> = ({ filters, onFiltersChange }) => {
+export const Filters = React.memo<FiltersProps>(({ filters, onFiltersChange }) => {
   const allTags = getUniqueValues(mockData.prospects, 'tags');
   const allSources = getUniqueValues(mockData.prospects, 'source');
 
@@ -74,4 +74,4 @@ export const Filters: React.FC<FiltersProps> = ({ filters, onFiltersChange }) =>
       </div>
     </div>
   );
-};
+});
