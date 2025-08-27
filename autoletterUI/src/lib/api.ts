@@ -35,7 +35,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 async function fetchWithRetry<T>(
   url: string,
   options?: RequestInit,
-  retries: number = 3,
+  retries: number = 2,
   delay: number = 1000
 ): Promise<T> {
   for (let i = 0; i < retries; i++) {

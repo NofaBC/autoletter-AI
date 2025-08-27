@@ -10,7 +10,7 @@ import { ProspectFilters } from '../lib/types';
 const NewsletterPage: React.FC = () => {
   const [filters, setFilters] = useState<ProspectFilters>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const { prospects, loading, total } = useProspects(filters);
+  const { prospects, loading, error, total, retry } = useProspects(filters);
 
   const [subject, setSubject] = useState('');
   const [fromName, setFromName] = useState('AutoLetter Team');
@@ -58,11 +58,13 @@ const NewsletterPage: React.FC = () => {
           <ProspectsTable
             prospects={prospects}
             loading={loading}
+            error={error}
             selectedIds={selectedIds}
             onSelectionChange={handleSelectionChange}
+            onRetry={retry}
           />
           
-          {!loading && (
+          {!loading && !error && (
             <div className="mt-4 text-sm text-gray-600">
               Showing {prospects.length} of {total} total prospects
             </div>

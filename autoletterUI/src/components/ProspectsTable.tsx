@@ -5,15 +5,19 @@ import { generateLastActivity } from '../lib/utils';
 interface ProspectsTableProps {
   prospects: Prospect[];
   loading: boolean;
+  error: string | null;
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
+  onRetry?: () => void;
 }
 
 export const ProspectsTable = React.memo<ProspectsTableProps>(({
   prospects,
   loading,
+  error,
   selectedIds,
-  onSelectionChange
+  onSelectionChange,
+  onRetry
 }) => {
   const [selectAll, setSelectAll] = useState(false);
 
@@ -44,6 +48,30 @@ export const ProspectsTable = React.memo<ProspectsTableProps>(({
         <div className="flex justify-center items-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <span className="ml-3 text-gray-600">Loading prospects...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow p-8">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">
+            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L4.316 15.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <p className="text-gray-700 mb-2">{error}</p>
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          )}
         </div>
       </div>
     );
