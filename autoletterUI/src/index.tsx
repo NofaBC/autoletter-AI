@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Suppress ResizeObserver error in development
 if (process.env.NODE_ENV === 'development') {
@@ -19,6 +20,8 @@ if (!container) throw new Error('Failed to find the root element');
 const root = createRoot(container);
 root.render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );

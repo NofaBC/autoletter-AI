@@ -9,6 +9,7 @@ import {
   ErrorResponse,
   ProspectFilters
 } from './types';
+import { logger } from './logger';
 
 const BASE_URL = 'https://mock.autol.ai/api';
 
@@ -59,7 +60,7 @@ export const api = {
       return await fetchWithRetry<ProspectsResponse>(`${BASE_URL}/prospects${queryString}`);
     } catch (error) {
       // For development, return filtered mock data
-      console.log('API not available, using mock data');
+      logger.log('API not available, using mock data');
       let filtered = [...mockData.prospects];
       
       if (filters.tag) {
@@ -91,7 +92,7 @@ export const api = {
       });
     } catch (error) {
       // Mock response for UI testing
-      console.log('API not available, returning mock success');
+      logger.log('API not available, returning mock success');
       return { status: 'ok' };
     }
   },
@@ -108,7 +109,7 @@ export const api = {
       });
     } catch (error) {
       // Mock response for UI testing
-      console.log('API not available, returning mock campaign ID');
+      logger.log('API not available, returning mock campaign ID');
       return { 
         campaignId: `cmp_${Date.now()}`,
         queued: data.recipientIds.length 
@@ -124,7 +125,7 @@ export const api = {
       );
     } catch (error) {
       // Mock response for UI testing - simulate progression
-      console.log('API not available, returning mock status');
+      logger.log('API not available, returning mock status');
       return {
         sent: 2,
         failed: 0,
