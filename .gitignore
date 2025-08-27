@@ -19,4 +19,4 @@ yarn-error.log*
 .vscode/
 .idea/
 CLAUDE.md
-STEP-BY-STEP.md
+plan.md

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../lib/api';
 import { formatDateForAPI, isFutureDate } from '../lib/utils';
 
@@ -29,8 +29,54 @@ export const SendBar: React.FC<SendBarProps> = ({
   const [loading, setLoading] = useState(false);
   const [testLoading, setTestLoading] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const firstFocusableRef = useRef<HTMLButtonElement>(null);
 
   const isValid = subject && bodyHtml && selectedIds.length > 0;
+
+  // Modal accessibility: Focus trap and ESC key handling
+  useEffect(() => {
+    if (showConfirmModal) {
+      // Focus first element when modal opens
+      if (firstFocusableRef.current) {
+        firstFocusableRef.current.focus();
+      }
+
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          setShowConfirmModal(false);
+        }
+        
+        // Basic focus trap
+        if (event.key === 'Tab' && modalRef.current) {
+          const focusableElements = modalRef.current.querySelectorAll(
+            'button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          const firstElement = focusableElements[0] as HTMLElement;
+          const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+          
+          if (event.shiftKey) {
+            // Shift + Tab
+            if (document.activeElement === firstElement) {
+              event.preventDefault();
+              lastElement.focus();
+            }
+          } else {
+            // Tab
+            if (document.activeElement === lastElement) {
+              event.preventDefault();
+              firstElement.focus();
+            }
+          }
+        }
+      };
+      
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [showConfirmModal]);
 
   const showToast = (type: 'success' | 'error', message: string) => {
     setToast({ type, message });
@@ -199,9 +245,15 @@ export const SendBar: React.FC<SendBarProps> = ({
       </div>
 
       {showConfirmModal && (
-        <div id="confirmSendModal" className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div 
+          id="confirmSendModal" 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <div ref={modalRef} className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 id="modal-title" className="text-lg font-semibold text-gray-900 mb-4">
               Confirm {sendType === 'now' ? 'Send' : 'Schedule'}
             </h3>
             
@@ -233,6 +285,7 @@ export const SendBar: React.FC<SendBarProps> = ({
             
             <div className="flex gap-3 justify-end">
               <button
+                ref={firstFocusableRef}
                 onClick={() => setShowConfirmModal(false)}
                 className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
               >
@@ -256,6 +309,8 @@ export const SendBar: React.FC<SendBarProps> = ({
           className={`fixed bottom-4 right-4 px-6 py-3 rounded-md shadow-lg z-50 ${
             toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
           }`}
+          role="status"
+          aria-live="polite"
         >
           {toast.message}
         </div>

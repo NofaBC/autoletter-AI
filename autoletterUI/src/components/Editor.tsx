@@ -118,17 +118,18 @@ export const Editor: React.FC<EditorProps> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label id="editor-label" className="block text-sm font-medium text-gray-700 mb-1">
             Newsletter Content *
           </label>
           
           <div className="border border-gray-300 rounded-md">
             <div className="border-b border-gray-300 p-2 bg-gray-50">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2" role="toolbar" aria-label="Text formatting">
                 <button
                   onClick={() => applyFormat('bold')}
                   className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100"
                   title="Bold"
+                  aria-label="Bold"
                 >
                   <strong>B</strong>
                 </button>
@@ -136,6 +137,7 @@ export const Editor: React.FC<EditorProps> = ({
                   onClick={() => applyFormat('italic')}
                   className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100"
                   title="Italic"
+                  aria-label="Italic"
                 >
                   <em>I</em>
                 </button>
@@ -143,6 +145,7 @@ export const Editor: React.FC<EditorProps> = ({
                   onClick={handleLink}
                   className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100"
                   title="Link"
+                  aria-label="Insert link"
                 >
                   🔗
                 </button>
@@ -150,6 +153,7 @@ export const Editor: React.FC<EditorProps> = ({
                   onClick={() => applyFormat('insertUnorderedList')}
                   className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100"
                   title="Bullet List"
+                  aria-label="Bullet list"
                 >
                   • List
                 </button>
@@ -157,6 +161,7 @@ export const Editor: React.FC<EditorProps> = ({
                   onClick={() => applyFormat('insertOrderedList')}
                   className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100"
                   title="Numbered List"
+                  aria-label="Numbered list"
                 >
                   1. List
                 </button>
@@ -171,6 +176,10 @@ export const Editor: React.FC<EditorProps> = ({
               className="min-h-[300px] p-4 focus:outline-none relative"
               style={{ whiteSpace: 'pre-wrap' }}
               data-placeholder="Start typing your newsletter content..."
+              role="textbox"
+              aria-multiline="true"
+              aria-labelledby="editor-label"
+              aria-required="true"
             />
           </div>
         </div>
