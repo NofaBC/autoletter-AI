@@ -28,6 +28,7 @@ export const SendBar: React.FC<SendBarProps> = ({
   const [sendType, setSendType] = useState<'now' | 'later'>('now');
   const [loading, setLoading] = useState(false);
   const [testLoading, setTestLoading] = useState(false);
+  const [scheduleError, setScheduleError] = useState('');
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const firstFocusableRef = useRef<HTMLButtonElement>(null);
@@ -122,6 +123,19 @@ export const SendBar: React.FC<SendBarProps> = ({
     return isFutureDate(scheduled);
   };
 
+  // Validate schedule on change
+  useEffect(() => {
+    if (scheduleDate && scheduleTime) {
+      if (!validateScheduleTime()) {
+        setScheduleError('Schedule time must be in the future');
+      } else {
+        setScheduleError('');
+      }
+    } else {
+      setScheduleError('');
+    }
+  }, [scheduleDate, scheduleTime]);
+
   const handleConfirmSend = async () => {
     if (!isValid) return;
 
@@ -183,8 +197,9 @@ export const SendBar: React.FC<SendBarProps> = ({
             <button
               id="sendTestBtn"
               onClick={handleTestSend}
-              disabled={testLoading || !subject || !bodyHtml}
+              disabled={testLoading || !subject || !bodyHtml || loading}
               className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              aria-busy={testLoading}
             >
               {testLoading ? 'Sending...' : 'Send Test'}
             </button>
@@ -192,19 +207,21 @@ export const SendBar: React.FC<SendBarProps> = ({
             <button
               id="sendNowBtn"
               onClick={handleSendNow}
-              disabled={!isValid}
+              disabled={!isValid || loading || testLoading}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              aria-busy={loading}
             >
-              Send Now
+              {loading && sendType === 'now' ? 'Processing...' : 'Send Now'}
             </button>
             
             <button
               id="scheduleBtn"
               onClick={handleSchedule}
-              disabled={!isValid}
+              disabled={!isValid || loading || testLoading}
               className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              aria-busy={loading}
             >
-              Schedule
+              {loading && sendType === 'later' ? 'Processing...' : 'Schedule'}
             </button>
           </div>
         </div>
@@ -227,19 +244,16 @@ export const SendBar: React.FC<SendBarProps> = ({
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
               <button
-                onClick={() => {
-                  if (!validateScheduleTime()) {
-                    showToast('error', 'Schedule time must be in the future');
-                    return;
-                  }
-                  setShowConfirmModal(true);
-                }}
-                disabled={!scheduleDate || !scheduleTime}
-                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400"
+                onClick={() => setShowConfirmModal(true)}
+                disabled={!scheduleDate || !scheduleTime || !!scheduleError}
+                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Confirm Schedule
               </button>
             </div>
+            {scheduleError && (
+              <p className="text-sm text-red-600 mt-2">{scheduleError}</p>
+            )}
           </div>
         )}
       </div>
@@ -315,6 +329,13 @@ export const SendBar: React.FC<SendBarProps> = ({
           {toast.message}
         </div>
       )}
+
+      {/* Hidden live region for loading announcements */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {testLoading && 'Sending test email...'}
+        {loading && sendType === 'now' && 'Sending newsletter...'}
+        {loading && sendType === 'later' && 'Scheduling newsletter...'}
+      </div>
     </>
   );
 };
