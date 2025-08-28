@@ -8,6 +8,17 @@ import {
   ErrorResponse,
   ProspectFilters
 } from './types';
+import { mockApi } from './mockApi';
+import { logger } from './logger';
+
+// Control mock API usage via localStorage for development
+const USE_MOCK_API =
+  process.env.NODE_ENV === 'development' &&
+  window.localStorage.getItem('USE_MOCK_API') === '1';
+
+if (USE_MOCK_API) {
+  logger.log('Using mock API - to disable: localStorage.removeItem("USE_MOCK_API")');
+}
 
 const BASE_URL = 'https://mock.autol.ai/api';
 
@@ -50,7 +61,8 @@ async function fetchApi<T>(
 
 // API Methods
 
-export const api = {
+// Use mock API if enabled, otherwise use real API
+export const api = USE_MOCK_API ? mockApi : {
   // GET /prospects
   getProspects: async (filters: ProspectFilters = {}): Promise<ProspectsResponse> => {
     const queryString = buildQueryString(filters);
