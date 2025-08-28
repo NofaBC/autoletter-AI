@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
+import { Bold, Italic, Link, List, ListOrdered } from 'lucide-react';
 import { LinkModal } from './LinkModal';
 
 interface EditorProps {
@@ -26,94 +27,140 @@ export const Editor: React.FC<EditorProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [showLinkModal, setShowLinkModal] = useState(false);
-  const [savedSelection, setSavedSelection] = useState<Range | null>(null);
 
-  const saveSelection = () => {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      setSavedSelection(selection.getRangeAt(0).cloneRange());
-    }
-  };
-
-  const restoreSelection = () => {
-    if (savedSelection && editorRef.current) {
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        selection.addRange(savedSelection);
-      }
-    }
-  };
-
-  const wrapSelection = (tagName: string) => {
+  const toggleFormat = useCallback((tag: string) => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
-    const selectedText = range.toString();
     
-    if (selectedText) {
-      const wrapper = document.createElement(tagName);
-      wrapper.textContent = selectedText;
-      range.deleteContents();
-      range.insertNode(wrapper);
-      
-      // Move cursor after the inserted element
-      range.setStartAfter(wrapper);
-      range.setEndAfter(wrapper);
-      selection.removeAllRanges();
-      selection.addRange(range);
+    // Check if we're already in this format
+    let parentElement = range.commonAncestorContainer as HTMLElement;
+    if (parentElement.nodeType === Node.TEXT_NODE) {
+      parentElement = parentElement.parentElement as HTMLElement;
+    }
+
+    // Check if current selection or parent has the tag
+    let hasFormat = false;
+    let formatElement = parentElement;
+    while (formatElement && formatElement !== editorRef.current) {
+      if (formatElement.tagName?.toLowerCase() === tag.toLowerCase()) {
+        hasFormat = true;
+        break;
+      }
+      formatElement = formatElement.parentElement as HTMLElement;
+    }
+
+    if (hasFormat && formatElement) {
+      // Remove formatting
+      const parent = formatElement.parentElement;
+      if (parent) {
+        while (formatElement.firstChild) {
+          parent.insertBefore(formatElement.firstChild, formatElement);
+        }
+        parent.removeChild(formatElement);
+      }
+    } else {
+      // Apply formatting
+      const selectedText = range.toString();
+      if (selectedText) {
+        const wrapper = document.createElement(tag);
+        try {
+          range.surroundContents(wrapper);
+        } catch {
+          // If surroundContents fails (partial selection), extract and wrap
+          const contents = range.extractContents();
+          wrapper.appendChild(contents);
+          range.insertNode(wrapper);
+        }
+        
+        // Reselect the text
+        range.selectNodeContents(wrapper);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
     }
 
     if (editorRef.current) {
       onBodyChange(editorRef.current.innerHTML);
     }
-  };
+  }, [onBodyChange]);
 
-  const insertList = (ordered: boolean) => {
+  const insertList = useCallback((ordered: boolean) => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0 || !editorRef.current) return;
 
     const range = selection.getRangeAt(0);
+    const selectedText = range.toString();
+    
+    // Split selected text into lines for multiple list items
+    const lines = selectedText ? selectedText.split('\n').filter(line => line.trim()) : [''];
+    
     const listElement = document.createElement(ordered ? 'ol' : 'ul');
-    const listItem = document.createElement('li');
-    listItem.textContent = range.toString() || 'List item';
-    listElement.appendChild(listItem);
+    
+    lines.forEach(line => {
+      const listItem = document.createElement('li');
+      listItem.textContent = line || 'List item';
+      listElement.appendChild(listItem);
+    });
     
     range.deleteContents();
     range.insertNode(listElement);
     
-    // Position cursor inside the list item
-    range.selectNodeContents(listItem);
-    range.collapse(false);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    // Position cursor inside the first list item
+    const firstLi = listElement.querySelector('li');
+    if (firstLi) {
+      range.selectNodeContents(firstLi);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
     
     onBodyChange(editorRef.current.innerHTML);
-  };
+  }, [onBodyChange]);
 
-  const handleLinkClick = () => {
-    saveSelection();
+  const handleLinkClick = useCallback(() => {
     setShowLinkModal(true);
-  };
+  }, []);
 
-  const insertLink = (url: string) => {
-    restoreSelection();
-    
+  const insertLink = useCallback((url: string) => {
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || !editorRef.current) return;
+    if (!selection || !editorRef.current) return;
 
-    const range = selection.getRangeAt(0);
-    const selectedText = range.toString() || url;
-    
+    editorRef.current.focus();
+
+    let range;
+    if (selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
+    } else {
+      // Create range at current position if no selection
+      range = document.createRange();
+      range.selectNodeContents(editorRef.current);
+      range.collapse(false);
+    }
+
+    const selectedText = range.toString();
     const link = document.createElement('a');
     link.href = url;
-    link.textContent = selectedText;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
+    link.className = 'text-blue-600 underline hover:text-blue-700';
     
-    range.deleteContents();
-    range.insertNode(link);
+    if (selectedText) {
+      // Wrap selected text in link
+      try {
+        range.surroundContents(link);
+      } catch {
+        // If surroundContents fails, extract and wrap
+        const contents = range.extractContents();
+        link.appendChild(contents);
+        range.insertNode(link);
+      }
+    } else {
+      // No text selected - insert the URL as link text
+      link.textContent = url;
+      range.insertNode(link);
+    }
     
     // Move cursor after the link
     range.setStartAfter(link);
@@ -122,18 +169,27 @@ export const Editor: React.FC<EditorProps> = ({
     selection.addRange(range);
     
     onBodyChange(editorRef.current.innerHTML);
-  };
+  }, [onBodyChange]);
 
-  const insertVariable = (variable: string) => {
+  const insertVariable = useCallback((variable: string) => {
     const varText = `{{${variable}}}`;
     if (!editorRef.current) return;
 
     editorRef.current.focus();
     
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
+    if (!selection) return;
 
-    const range = selection.getRangeAt(0);
+    let range;
+    if (selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
+    } else {
+      // Create range at the end if no selection
+      range = document.createRange();
+      range.selectNodeContents(editorRef.current);
+      range.collapse(false);
+    }
+
     const textNode = document.createTextNode(varText);
     range.deleteContents();
     range.insertNode(textNode);
@@ -145,13 +201,29 @@ export const Editor: React.FC<EditorProps> = ({
     selection.addRange(range);
     
     onBodyChange(editorRef.current.innerHTML);
-  };
+  }, [onBodyChange]);
 
-  const handleEditorChange = () => {
+  const handleEditorChange = useCallback(() => {
     if (editorRef.current) {
       onBodyChange(editorRef.current.innerHTML);
     }
-  };
+  }, [onBodyChange]);
+
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(document.createTextNode(text));
+    range.collapse(false);
+    
+    if (editorRef.current) {
+      onBodyChange(editorRef.current.innerHTML);
+    }
+  }, [onBodyChange]);
 
   // Initialize editor with bodyHtml if provided
   React.useEffect(() => {
@@ -234,48 +306,48 @@ export const Editor: React.FC<EditorProps> = ({
                 <div className="flex flex-wrap gap-2" role="toolbar" aria-label="Text formatting">
                   <button
                     type="button"
-                    onClick={() => wrapSelection('strong')}
-                    className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100"
-                    title="Bold"
+                    onClick={() => toggleFormat('strong')}
+                    className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center"
+                    title="Bold (toggle)"
                     aria-label="Bold"
                   >
-                    <strong>B</strong>
+                    <Bold size={16} />
                   </button>
                   <button
                     type="button"
-                    onClick={() => wrapSelection('em')}
-                    className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100"
-                    title="Italic"
+                    onClick={() => toggleFormat('em')}
+                    className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center"
+                    title="Italic (toggle)"
                     aria-label="Italic"
                   >
-                    <em>I</em>
+                    <Italic size={16} />
                   </button>
                   <button
                     type="button"
                     onClick={handleLinkClick}
-                    className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100"
+                    className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center"
                     title="Link"
                     aria-label="Insert link"
                   >
-                    🔗
+                    <Link size={16} />
                   </button>
                   <button
                     type="button"
                     onClick={() => insertList(false)}
-                    className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100"
+                    className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center"
                     title="Bullet List"
                     aria-label="Bullet list"
                   >
-                    • List
+                    <List size={16} />
                   </button>
                   <button
                     type="button"
                     onClick={() => insertList(true)}
-                    className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100"
+                    className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center"
                     title="Numbered List"
                     aria-label="Numbered list"
                   >
-                    1. List
+                    <ListOrdered size={16} />
                   </button>
                 </div>
               </div>
@@ -285,9 +357,9 @@ export const Editor: React.FC<EditorProps> = ({
                 ref={editorRef}
                 contentEditable
                 onInput={handleEditorChange}
-                className="min-h-[300px] p-4 focus:outline-none relative"
+                onPaste={handlePaste}
+                className="min-h-[300px] p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
                 style={{ whiteSpace: 'pre-wrap' }}
-                data-placeholder="Start typing your newsletter content..."
                 role="textbox"
                 aria-multiline="true"
                 aria-labelledby="editor-label"
