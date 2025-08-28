@@ -52,7 +52,8 @@ const NewsletterPage: React.FC = () => {
           )}
           
           <Filters 
-            filters={filters} 
+            filters={filters}
+            prospects={prospects}
             onFiltersChange={handleFiltersChange} 
           />
           

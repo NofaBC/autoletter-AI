@@ -7,19 +7,10 @@ interface UseNewsletterStatusProps {
   enabled: boolean;
 }
 
-// Mock status progression for demo
-const mockStatusProgression: NewsletterStatusResponse[] = [
-  { sent: 0, failed: 0, state: 'queued' },
-  { sent: 0, failed: 0, state: 'sending' },
-  { sent: 1, failed: 0, state: 'sending' },
-  { sent: 2, failed: 0, state: 'done' }
-];
-
 export const useNewsletterStatus = ({ campaignId, enabled }: UseNewsletterStatusProps) => {
   const [status, setStatus] = useState<NewsletterStatusResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const mockProgressIndex = useRef(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -41,18 +32,11 @@ export const useNewsletterStatus = ({ campaignId, enabled }: UseNewsletterStatus
           intervalRef.current = null;
         }
       } catch (err) {
-        // For demo purposes, use mock progression
-        if (mockProgressIndex.current < mockStatusProgression.length) {
-          setStatus(mockStatusProgression[mockProgressIndex.current]);
-          mockProgressIndex.current++;
-          
-          // Stop when we reach the end
-          if (mockProgressIndex.current >= mockStatusProgression.length && intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-        } else {
-          setError(err instanceof Error ? err.message : 'Failed to fetch status');
+        setError(err instanceof Error ? err.message : 'Failed to fetch status');
+        // Stop polling on error
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
         }
       } finally {
         setLoading(false);
@@ -71,7 +55,6 @@ export const useNewsletterStatus = ({ campaignId, enabled }: UseNewsletterStatus
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      mockProgressIndex.current = 0;
     };
   }, [campaignId, enabled]);
 
