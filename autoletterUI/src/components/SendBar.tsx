@@ -186,11 +186,15 @@ export const SendBar: React.FC<SendBarProps> = ({
         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Send Options</h3>
-            {selectedIds.length === 0 && (
-              <p className="text-sm text-red-600 mt-1">Select recipients to enable sending</p>
-            )}
-            {(!subject || !bodyHtml) && (
-              <p className="text-sm text-red-600 mt-1">Subject and content are required</p>
+            {!isValid && (
+              <>
+                {selectedIds.length === 0 && (
+                  <p className="text-sm text-red-600 mt-1">Select recipients to enable sending</p>
+                )}
+                {(!subject || !bodyHtml) && (
+                  <p className="text-sm text-red-600 mt-1">Subject and content are required</p>
+                )}
+              </>
             )}
           </div>
           
@@ -222,7 +226,7 @@ export const SendBar: React.FC<SendBarProps> = ({
               className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               aria-busy={loading}
             >
-              {loading && sendType === 'later' ? 'Processing...' : 'Schedule'}
+              {loading && sendType === 'later' ? 'Processing...' : 'Open Scheduler'}
             </button>
           </div>
         </div>
