@@ -59,35 +59,63 @@ export const StatusView: React.FC<StatusViewProps> = ({ campaignId, isScheduled 
     }
   };
 
-  const getStatusColor = () => {
+  const getStatusStyles = () => {
     switch (status.state) {
-      case 'queued': return 'yellow';
-      case 'sending': return 'blue';
-      case 'done': return 'green';
-      default: return 'gray';
+      case 'queued':
+        return {
+          container: 'mt-6 bg-yellow-50 border border-yellow-200 rounded-md p-4',
+          title: 'ml-2 text-lg font-medium text-yellow-900',
+          campaignId: 'text-sm text-yellow-700 mb-1',
+          stats: 'text-sm text-yellow-800 space-y-1',
+          link: 'inline-flex items-center gap-1 mt-3 text-sm text-yellow-600 hover:text-yellow-700 underline'
+        };
+      case 'sending':
+        return {
+          container: 'mt-6 bg-blue-50 border border-blue-200 rounded-md p-4',
+          title: 'ml-2 text-lg font-medium text-blue-900',
+          campaignId: 'text-sm text-blue-700 mb-1',
+          stats: 'text-sm text-blue-800 space-y-1',
+          link: 'inline-flex items-center gap-1 mt-3 text-sm text-blue-600 hover:text-blue-700 underline'
+        };
+      case 'done':
+        return {
+          container: 'mt-6 bg-green-50 border border-green-200 rounded-md p-4',
+          title: 'ml-2 text-lg font-medium text-green-900',
+          campaignId: 'text-sm text-green-700 mb-1',
+          stats: 'text-sm text-green-800 space-y-1',
+          link: 'inline-flex items-center gap-1 mt-3 text-sm text-green-600 hover:text-green-700 underline'
+        };
+      default:
+        return {
+          container: 'mt-6 bg-gray-50 border border-gray-200 rounded-md p-4',
+          title: 'ml-2 text-lg font-medium text-gray-900',
+          campaignId: 'text-sm text-gray-700 mb-1',
+          stats: 'text-sm text-gray-800 space-y-1',
+          link: 'inline-flex items-center gap-1 mt-3 text-sm text-gray-600 hover:text-gray-700 underline'
+        };
     }
   };
 
-  const color = getStatusColor();
+  const styles = getStatusStyles();
 
   return (
-    <div className={`mt-6 bg-${color}-50 border border-${color}-200 rounded-md p-4`}>
+    <div className={styles.container}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center mb-2">
             {getStatusIcon()}
-            <h3 className={`ml-2 text-lg font-medium text-${color}-900`}>
+            <h3 className={styles.title}>
               {status.state === 'queued' && 'Queued'}
               {status.state === 'sending' && 'Sending'}
               {status.state === 'done' && 'Completed'}
             </h3>
           </div>
           
-          <p className={`text-sm text-${color}-700 mb-1`}>
+          <p className={styles.campaignId}>
             Campaign ID: {campaignId}
           </p>
           
-          <div className={`text-sm text-${color}-800 space-y-1`}>
+          <div className={styles.stats}>
             <p className="flex items-center gap-1">
               <Check className="w-4 h-4" /> Sent: {status.sent}
             </p>
@@ -101,7 +129,7 @@ export const StatusView: React.FC<StatusViewProps> = ({ campaignId, isScheduled 
           {status.state === 'done' && (
             <a 
               href="#"
-              className={`inline-flex items-center gap-1 mt-3 text-sm text-${color}-600 hover:text-${color}-700 underline`}
+              className={styles.link}
               onClick={(e) => {
                 e.preventDefault();
                 alert('Campaign report view - coming soon!');
