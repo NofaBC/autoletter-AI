@@ -60,24 +60,15 @@ export const getUniqueValues = <T>(items: T[], key: keyof T): string[] => {
   return Array.from(values).sort();
 };
 
-export const generateLastActivity = (): string => {
-  const activities = [
-    'Opened newsletter',
-    'Clicked link',
-    'Subscribed',
-    'Updated profile',
-    'Downloaded resource'
-  ];
-  const times = [
-    '2 hours ago',
-    '1 day ago',
-    '3 days ago',
-    '1 week ago',
-    '2 weeks ago'
-  ];
+export const getLastActivity = (prospectId: string): string => {
+  // Use stable mock data instead of random generation
+  const activityMap: Record<string, string> = {
+    'p1': 'Opened newsletter - 2 hours ago',
+    'p2': 'Subscribed - 1 day ago',
+    'p3': 'Clicked link - 3 days ago',
+    'p4': 'Updated profile - 1 week ago',
+    'p5': 'Downloaded resource - 2 weeks ago'
+  };
   
-  const randomActivity = activities[Math.floor(Math.random() * activities.length)];
-  const randomTime = times[Math.floor(Math.random() * times.length)];
-  
-  return `${randomActivity} - ${randomTime}`;
+  return activityMap[prospectId] || 'No recent activity';
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ProspectFilters } from '../lib/types';
-import { mockData } from '../lib/api';
+import { mockProspects } from '../lib/mockData';
 import { getUniqueValues } from '../lib/utils';
 
 interface FiltersProps {
@@ -9,8 +9,8 @@ interface FiltersProps {
 }
 
 export const Filters = React.memo<FiltersProps>(({ filters, onFiltersChange }) => {
-  const allTags = getUniqueValues(mockData.prospects, 'tags');
-  const allSources = getUniqueValues(mockData.prospects, 'source');
+  const allTags = getUniqueValues(mockProspects, 'tags');
+  const allSources = getUniqueValues(mockProspects, 'source');
 
   const handleFilterChange = (key: keyof ProspectFilters, value: any) => {
     onFiltersChange({

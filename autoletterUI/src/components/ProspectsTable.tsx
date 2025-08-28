@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Prospect } from '../lib/types';
-import { generateLastActivity } from '../lib/utils';
+import { getLastActivity } from '../lib/utils';
 
 interface ProspectsTableProps {
   prospects: Prospect[];
@@ -155,7 +155,7 @@ export const ProspectsTable = React.memo<ProspectsTableProps>(({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {generateLastActivity()}
+                  {getLastActivity(prospect.id)}
                 </td>
               </tr>
             ))}
