@@ -4,14 +4,20 @@ import './index.css';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-// Suppress ResizeObserver error in development
+// Suppress ResizeObserver errors in development
 if (process.env.NODE_ENV === 'development') {
-  const errorHandler = (e: ErrorEvent) => {
-    if (e.message?.includes('ResizeObserver')) {
+  const BLOCK = [
+    'ResizeObserver loop limit exceeded',
+    'ResizeObserver loop completed with undelivered notifications'
+  ];
+  const onError = (e: ErrorEvent) => {
+    const msg = e?.message || '';
+    if (BLOCK.some(t => msg.includes(t))) {
       e.stopImmediatePropagation();
+      e.preventDefault();
     }
   };
-  window.addEventListener('error', errorHandler);
+  window.addEventListener('error', onError, true); // capture phase
 }
 
 const container = document.getElementById('root');
