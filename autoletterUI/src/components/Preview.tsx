@@ -1,4 +1,5 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 import { replaceVariables } from '../lib/utils';
 
 interface PreviewProps {
@@ -17,6 +18,7 @@ export const Preview: React.FC<PreviewProps> = ({
   bodyHtml
 }) => {
   const processedBody = replaceVariables(bodyHtml);
+  const sanitizedBody = DOMPurify.sanitize(processedBody);
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -34,7 +36,7 @@ export const Preview: React.FC<PreviewProps> = ({
         <div className="p-4">
           {bodyHtml ? (
             <div 
-              dangerouslySetInnerHTML={{ __html: processedBody }}
+              dangerouslySetInnerHTML={{ __html: sanitizedBody }}
               className="prose prose-sm max-w-none"
             />
           ) : (

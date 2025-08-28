@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../lib/api';
+import { ProspectFilters } from '../lib/types';
 import { formatDateForAPI, isFutureDate } from '../lib/utils';
 
 interface SendBarProps {
@@ -8,7 +9,7 @@ interface SendBarProps {
   previewText: string;
   bodyHtml: string;
   selectedIds: string[];
-  filters: any;
+  filters: ProspectFilters;
   onSendSuccess?: (campaignId: string, scheduled: boolean) => void;
 }
 
