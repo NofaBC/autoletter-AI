@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { Bold, Italic, Link, List, ListOrdered } from 'lucide-react';
 import { LinkModal } from './LinkModal';
+import { applyFormat, applyLink } from '../lib/rte';
 
 interface EditorProps {
   subject: string;
@@ -27,148 +28,82 @@ export const Editor: React.FC<EditorProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const savedSelection = useRef<Range | null>(null);
 
-  const toggleFormat = useCallback((tag: string) => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-
-    const range = selection.getRangeAt(0);
-    
-    // Check if we're already in this format
-    let parentElement = range.commonAncestorContainer as HTMLElement;
-    if (parentElement.nodeType === Node.TEXT_NODE) {
-      parentElement = parentElement.parentElement as HTMLElement;
-    }
-
-    // Check if current selection or parent has the tag
-    let hasFormat = false;
-    let formatElement = parentElement;
-    while (formatElement && formatElement !== editorRef.current) {
-      if (formatElement.tagName?.toLowerCase() === tag.toLowerCase()) {
-        hasFormat = true;
-        break;
-      }
-      formatElement = formatElement.parentElement as HTMLElement;
-    }
-
-    if (hasFormat && formatElement) {
-      // Remove formatting
-      const parent = formatElement.parentElement;
-      if (parent) {
-        while (formatElement.firstChild) {
-          parent.insertBefore(formatElement.firstChild, formatElement);
-        }
-        parent.removeChild(formatElement);
-      }
-    } else {
-      // Apply formatting
-      const selectedText = range.toString();
-      if (selectedText) {
-        const wrapper = document.createElement(tag);
-        try {
-          range.surroundContents(wrapper);
-        } catch {
-          // If surroundContents fails (partial selection), extract and wrap
-          const contents = range.extractContents();
-          wrapper.appendChild(contents);
-          range.insertNode(wrapper);
-        }
-        
-        // Reselect the text
-        range.selectNodeContents(wrapper);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-    }
-
+  const handleFormat = useCallback((cmd: 'bold' | 'italic') => {
+    applyFormat(cmd);
     if (editorRef.current) {
       onBodyChange(editorRef.current.innerHTML);
     }
   }, [onBodyChange]);
 
   const insertList = useCallback((ordered: boolean) => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || !editorRef.current) return;
-
-    const range = selection.getRangeAt(0);
-    const selectedText = range.toString();
-    
-    // Split selected text into lines for multiple list items
-    const lines = selectedText ? selectedText.split('\n').filter(line => line.trim()) : [''];
-    
-    const listElement = document.createElement(ordered ? 'ol' : 'ul');
-    
-    lines.forEach(line => {
-      const listItem = document.createElement('li');
-      listItem.textContent = line || 'List item';
-      listElement.appendChild(listItem);
-    });
-    
-    range.deleteContents();
-    range.insertNode(listElement);
-    
-    // Position cursor inside the first list item
-    const firstLi = listElement.querySelector('li');
-    if (firstLi) {
-      range.selectNodeContents(firstLi);
-      range.collapse(false);
-      selection.removeAllRanges();
-      selection.addRange(range);
+    applyFormat(ordered ? 'insertOrderedList' : 'insertUnorderedList');
+    if (editorRef.current) {
+      onBodyChange(editorRef.current.innerHTML);
     }
-    
-    onBodyChange(editorRef.current.innerHTML);
   }, [onBodyChange]);
 
   const handleLinkClick = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    if (!range.toString()) {
+      // Show subtle hint
+      const linkButton = document.querySelector('button[title="Link"]');
+      if (linkButton) {
+        const hint = document.createElement('div');
+        hint.textContent = 'Please select text first';
+        hint.className = 'absolute -top-8 left-0 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg z-10 whitespace-nowrap';
+        
+        const parent = linkButton.parentElement;
+        if (parent) {
+          parent.style.position = 'relative';
+          parent.appendChild(hint);
+          setTimeout(() => hint.remove(), 2000);
+        }
+      }
+      return;
+    }
+    
+    // Save the current selection before modal opens
+    savedSelection.current = range.cloneRange();
     setShowLinkModal(true);
   }, []);
 
   const insertLink = useCallback((url: string) => {
-    const selection = window.getSelection();
-    if (!selection || !editorRef.current) return;
-
+    if (!editorRef.current) return;
+    
+    // Focus the editor
     editorRef.current.focus();
-
-    let range;
-    if (selection.rangeCount > 0) {
-      range = selection.getRangeAt(0);
-    } else {
-      // Create range at current position if no selection
-      range = document.createRange();
-      range.selectNodeContents(editorRef.current);
-      range.collapse(false);
-    }
-
-    const selectedText = range.toString();
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.className = 'text-blue-600 underline hover:text-blue-700';
     
-    if (selectedText) {
-      // Wrap selected text in link
-      try {
-        range.surroundContents(link);
-      } catch {
-        // If surroundContents fails, extract and wrap
-        const contents = range.extractContents();
-        link.appendChild(contents);
-        range.insertNode(link);
+    // Restore the saved selection
+    if (savedSelection.current) {
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(savedSelection.current);
       }
-    } else {
-      // No text selected - insert the URL as link text
-      link.textContent = url;
-      range.insertNode(link);
     }
     
-    // Move cursor after the link
-    range.setStartAfter(link);
-    range.setEndAfter(link);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    // Now apply the link to the restored selection
+    const success = applyLink(url);
     
-    onBodyChange(editorRef.current.innerHTML);
+    if (success) {
+      // Add target and rel attributes
+      setTimeout(() => {
+        const links = editorRef.current!.querySelectorAll('a:not([target])');
+        links.forEach(link => {
+          link.setAttribute('target', '_blank');
+          link.setAttribute('rel', 'noopener noreferrer');
+        });
+        onBodyChange(editorRef.current!.innerHTML);
+      }, 50);
+    }
+    
+    // Clear the saved selection
+    savedSelection.current = null;
   }, [onBodyChange]);
 
   const insertVariable = useCallback((variable: string) => {
@@ -306,7 +241,7 @@ export const Editor: React.FC<EditorProps> = ({
                 <div className="flex flex-wrap gap-2" role="toolbar" aria-label="Text formatting">
                   <button
                     type="button"
-                    onClick={() => toggleFormat('strong')}
+                    onClick={() => handleFormat('bold')}
                     className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center"
                     title="Bold (toggle)"
                     aria-label="Bold"
@@ -315,7 +250,7 @@ export const Editor: React.FC<EditorProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => toggleFormat('em')}
+                    onClick={() => handleFormat('italic')}
                     className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center"
                     title="Italic (toggle)"
                     aria-label="Italic"
@@ -358,8 +293,7 @@ export const Editor: React.FC<EditorProps> = ({
                 contentEditable
                 onInput={handleEditorChange}
                 onPaste={handlePaste}
-                className="min-h-[300px] p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
-                style={{ whiteSpace: 'pre-wrap' }}
+                className="min-h-[300px] p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset whitespace-pre-wrap"
                 role="textbox"
                 aria-multiline="true"
                 aria-labelledby="editor-label"
