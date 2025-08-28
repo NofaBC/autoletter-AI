@@ -12,7 +12,7 @@ export const Filters = React.memo<FiltersProps>(({ filters, prospects, onFilters
   const allTags = getUniqueValues(prospects, 'tags');
   const allSources = getUniqueValues(prospects, 'source');
 
-  const handleFilterChange = (key: keyof ProspectFilters, value: any) => {
+  const handleFilterChange = (key: keyof ProspectFilters, value: string | boolean | undefined) => {
     onFiltersChange({
       ...filters,
       [key]: value === '' ? undefined : value
