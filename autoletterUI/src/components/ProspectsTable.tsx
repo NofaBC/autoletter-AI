@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Prospect } from '../lib/types';
-import { getLastActivity } from '../lib/utils';
+import { ProspectRow } from './ProspectRow';
 
 interface ProspectsTableProps {
   prospects: Prospect[];
@@ -34,13 +34,13 @@ export const ProspectsTable = React.memo<ProspectsTableProps>(({
     setSelectAll(!selectAll);
   };
 
-  const handleSelectOne = (id: string) => {
+  const handleSelectOne = useCallback((id: string) => {
     if (selectedIds.includes(id)) {
       onSelectionChange(selectedIds.filter(sid => sid !== id));
     } else {
       onSelectionChange([...selectedIds, id]);
     }
-  };
+  }, [selectedIds, onSelectionChange]);
 
   if (loading) {
     return (
@@ -121,43 +121,12 @@ export const ProspectsTable = React.memo<ProspectsTableProps>(({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {prospects.map((prospect) => (
-              <tr key={prospect.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(prospect.id)}
-                    onChange={() => handleSelectOne(prospect.id)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    aria-label={`Select ${prospect.firstName}`}
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {prospect.firstName}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{prospect.email}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{prospect.source}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex flex-wrap gap-1">
-                    {prospect.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {getLastActivity(prospect.id)}
-                </td>
-              </tr>
+              <ProspectRow
+                key={prospect.id}
+                prospect={prospect}
+                isSelected={selectedIds.includes(prospect.id)}
+                onToggleSelect={handleSelectOne}
+              />
             ))}
           </tbody>
         </table>
