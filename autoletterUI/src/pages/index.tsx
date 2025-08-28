@@ -4,6 +4,7 @@ import { Filters } from '../components/Filters';
 import { Editor } from '../components/Editor';
 import { Preview } from '../components/Preview';
 import { SendBar } from '../components/SendBar';
+import { StatusView } from '../components/StatusView';
 import { useProspects } from '../hooks/useProspects';
 import { ProspectFilters } from '../lib/types';
 
@@ -107,11 +108,7 @@ const NewsletterPage: React.FC = () => {
         />
 
         {campaignId && (
-          <div className="mt-6 bg-green-50 border border-green-200 rounded-md p-4">
-            <p className="text-green-800">
-              Newsletter {campaignScheduled ? 'scheduled' : 'sent'}! Campaign ID: {campaignId}
-            </p>
-          </div>
+          <StatusView campaignId={campaignId} isScheduled={campaignScheduled} />
         )}
       </main>
     </div>
