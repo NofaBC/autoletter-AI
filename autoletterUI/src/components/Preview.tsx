@@ -18,7 +18,9 @@ export const Preview: React.FC<PreviewProps> = ({
   bodyHtml
 }) => {
   const processedBody = replaceVariables(bodyHtml);
-  const sanitizedBody = DOMPurify.sanitize(processedBody);
+  const sanitizedBody = DOMPurify.sanitize(processedBody, {
+    ADD_ATTR: ['target', 'rel'] // Allow these attributes in addition to defaults
+  });
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -37,7 +39,7 @@ export const Preview: React.FC<PreviewProps> = ({
           {bodyHtml ? (
             <div 
               dangerouslySetInnerHTML={{ __html: sanitizedBody }}
-              className="prose prose-sm max-w-none"
+              className="prose prose-sm max-w-none whitespace-pre-wrap"
             />
           ) : (
             <p className="text-gray-400 italic">Start typing to see preview...</p>
