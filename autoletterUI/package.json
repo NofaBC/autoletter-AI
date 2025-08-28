@@ -19,6 +19,7 @@
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.7",
     "dompurify": "^3.2.6",
+    "lucide-react": "^0.542.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "typescript": "^5.9.2"

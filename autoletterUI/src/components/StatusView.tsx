@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check, X, Clock, Loader2, CheckCircle, ArrowRight } from 'lucide-react';
 import { useNewsletterStatus } from '../hooks/useNewsletterStatus';
 
 interface StatusViewProps {
@@ -20,12 +21,7 @@ export const StatusView: React.FC<StatusViewProps> = ({ campaignId, isScheduled 
             <p className="text-blue-800 font-medium">Newsletter Scheduled</p>
             <p className="text-sm text-blue-600 mt-1">Campaign ID: {campaignId}</p>
           </div>
-          <div className="text-blue-600">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
+          <Clock className="w-8 h-8 text-blue-600" />
         </div>
       </div>
     );
@@ -35,7 +31,7 @@ export const StatusView: React.FC<StatusViewProps> = ({ campaignId, isScheduled 
     return (
       <div className="mt-6 bg-gray-50 border border-gray-200 rounded-md p-4">
         <div className="flex items-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+          <Loader2 className="w-6 h-6 mr-3 animate-spin text-blue-600" />
           <p className="text-gray-700">Loading status...</p>
         </div>
       </div>
@@ -55,23 +51,11 @@ export const StatusView: React.FC<StatusViewProps> = ({ campaignId, isScheduled 
   const getStatusIcon = () => {
     switch (status.state) {
       case 'queued':
-        return (
-          <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        );
+        return <Clock className="w-6 h-6 text-yellow-600" />;
       case 'sending':
-        return (
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-        );
+        return <Loader2 className="w-6 h-6 animate-spin text-blue-600" />;
       case 'done':
-        return (
-          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        );
+        return <CheckCircle className="w-6 h-6 text-green-600" />;
     }
   };
 
@@ -104,20 +88,26 @@ export const StatusView: React.FC<StatusViewProps> = ({ campaignId, isScheduled 
           </p>
           
           <div className={`text-sm text-${color}-800 space-y-1`}>
-            <p>✓ Sent: {status.sent}</p>
-            {status.failed > 0 && <p>✗ Failed: {status.failed}</p>}
+            <p className="flex items-center gap-1">
+              <Check className="w-4 h-4" /> Sent: {status.sent}
+            </p>
+            {status.failed > 0 && (
+              <p className="flex items-center gap-1">
+                <X className="w-4 h-4" /> Failed: {status.failed}
+              </p>
+            )}
           </div>
 
           {status.state === 'done' && (
             <a 
               href="#"
-              className={`inline-block mt-3 text-sm text-${color}-600 hover:text-${color}-700 underline`}
+              className={`inline-flex items-center gap-1 mt-3 text-sm text-${color}-600 hover:text-${color}-700 underline`}
               onClick={(e) => {
                 e.preventDefault();
                 alert('Campaign report view - coming soon!');
               }}
             >
-              View campaign report →
+              View campaign report <ArrowRight className="w-4 h-4" />
             </a>
           )}
         </div>
